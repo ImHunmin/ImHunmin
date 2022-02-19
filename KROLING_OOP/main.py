@@ -1,4 +1,3 @@
-
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
@@ -6,30 +5,23 @@ import datetime
 import telegram
 import sys
 import schedule
-
 def kkrroling(site, xxppaath):
     webdriver_options = webdriver.ChromeOptions()
     webdriver_options.add_argument('headless')
-
     driver = webdriver.Chrome(options=webdriver_options)
     driver.get(site)
     time.sleep(1)
     table = driver.find_element(By.XPATH, xxppaath).text
     return table
-
-
 def make_nalza(year, month, day):
     nalza =[]
     for i in range(0, len(year)):
         nalza.append(year[i] + month[i] + day[i].strip(","))
     return nalza
-
 def strtodateformat(nalza, format):
     nalza_dateformat = []
     for i in range(0, len(nalza)):
         nalza_dateformat.append(datetime.datetime.strptime(nalza[i], format))
-
-
 def job():
     url1 = 'https://ycharts.com/indicators/us_pmi'
     xpathh1 = "/html/body/main/div/div[4]/div/div/div/div/div[1]/div[2]"
@@ -66,6 +58,8 @@ def job():
     nalza_unt_202001 = make_nalza(year_ism_unt_202001, month_ism_unt_202001, day_ism_unt_202001)
     nalza_ism = nalza_unt_202001+nalza_fro_202001
 
+    print(value_ism)
+
     strtodateformat(nalza_ism, nz_format_ism)
 #### ISM_PMI DATA Processing end
 
@@ -86,15 +80,22 @@ def job():
 #### sales comparision year DATA Processing end
 
 ###Message Transfer
-    bot.sendMessage(chat_id=telegram_chat_id, text='{}'.format(today_date))
-    if((value_ism[-1]>value_ism[-2]>value_ism[-3])&(value_sales[-1]>value_sales[-2]>value_sales[-3])):
-        bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : korean stock // sell : American dollar bond')
-    elif((value_ism[-1]<value_ism[-2]<value_ism[-3])&(value_sales[-1]<value_sales[-2]<value_sales[-3])):
-        bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : American dollar bond // sell : korean stock')
-    else:
-        bot.sendMessage(chat_id=telegram_chat_id, text='hold')
 
-schedule.every().days.at("22:22").do(job)
+    bot.sendMessage(chat_id=telegram_chat_id, text='{}'.format(today_date))
+    bot.sendMessage(chat_id=telegram_chat_id, text=
+    'pmi지수 : {}'.format(value_ism[-2]))
+
+
+
+
+    # if((value_ism[-1]>value_ism[-2]>value_ism[-3])&(value_sales[-1]>value_sales[-2]>value_sales[-3])):
+    #     bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : korean stock // sell : American dollar bond')
+    # elif((value_ism[-1]<value_ism[-2]<value_ism[-3])&(value_sales[-1]<value_sales[-2]<value_sales[-3])):
+    #     bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : American dollar bond // sell : korean stock')
+    # else:
+    #     bot.sendMessage(chat_id=telegram_chat_id, text='hold')
+
+schedule.every().days.at("22:33").do(job)
 
 while True:
     schedule.run_pending()

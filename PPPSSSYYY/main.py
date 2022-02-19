@@ -1,32 +1,99 @@
-import csv
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
-import matplotlib.pyplot as plt
 import datetime
 import telegram
+import numpy as np
+import pandas as pd
 import sys
 import schedule
-
-url1 = 'https://ycharts.com/indicators/us_pmi'
-xpathh1 = "/html/body/main/div/div[4]/div/div/div/div/div[1]/div[2]"
-
-url2 = 'https://investing.com/economic-calendar/retail-sales-1878'
-xpathh2 = "//*[@id='eventHistoryTable1878']"
-
-
 def kkrroling(site, xxppaath):
     webdriver_options = webdriver.ChromeOptions()
     webdriver_options.add_argument('headless')
-
     driver = webdriver.Chrome(options=webdriver_options)
     driver.get(site)
     time.sleep(1)
     table = driver.find_element(By.XPATH, xxppaath).text
     return table
+def Strtofloat(list):
+    list_float = []
+    for i in range(0, len(list)):
+        list_float.append(list[i].strip("%"))
+    return list_float
+def make_nalza(year, month, day):
+    nalza =[]
+    for i in range(0, len(year)):
+        nalza.append(year[i] + month[i] + day[i].strip(","))
+    return nalza
+def strtodateformat(nalza, format):
+    nalza_dateformat = []
+    for i in range(0, len(nalza)):
+        nalza_dateformat.append(datetime.datetime.strptime(nalza[i], format))
+    return nalza_dateformat
+
+def make_mv_avg(list, w):
+    x = np.array(list, dtype=float)
+    mv_avg = np.convolve(x, np.ones(w), 'valid') / w
+    return mv_avg
+
+url1 = 'https://ycharts.com/indicators/us_pmi'
+xpathh1 = "/html/body/main/div/div[4]/div/div/div/div/div[1]/div[2]"
+nz_format_ism = '%Y%B%d'
+
+url2 = 'https://investing.com/economic-calendar/retail-sales-1878'
+xpathh2 = "//*[@id='eventHistoryTable1878']"
+nz_format_sales = '%Y%b%d'
+
+api_key = '5165191702:AAHfSlZy8SnvYBq58VWcfME7GgcENcVgCzM'
+bot = telegram.Bot(token=api_key)
+telegram_chat_id = '1786134332'
+
+today_date = (datetime.datetime.now().date()).strftime("%Y-%m-%d")
+
+    #### ISM_PMI DATA Processing start
+data_ism = kkrroling(url1, xpathh1).split()
+data_sim_sl = data_ism[13::]
+data_sim_sl.reverse()
+
+value_ism_unt_202001 = data_sim_sl[0:100:4]
+year_ism_unt_202001 = data_sim_sl[1:100:4]
+month_ism_unt_202001 = data_sim_sl[3:100:4]
+day_ism_unt_202001 = data_sim_sl[2:100:4]
+
+value_ism_fro_202001 = data_sim_sl[102:-1:4]
+year_ism_fro_202001 = data_sim_sl[103::4]
+month_ism_fro_202001 = data_sim_sl[105::4]
+day_ism_fro_202001 = data_sim_sl[104::4]
+
+value_ism = value_ism_unt_202001+value_ism_fro_202001
+nalza_fro_202001 = make_nalza(year_ism_fro_202001, month_ism_fro_202001, day_ism_fro_202001)
+nalza_unt_202001 = make_nalza(year_ism_unt_202001, month_ism_unt_202001, day_ism_unt_202001)
+nalza_ism = nalza_unt_202001+nalza_fro_202001
+
+nalza_ism_dateformat = strtodateformat(nalza_ism, nz_format_ism)
+#### ISM_PMI DATA Processing end
+
+#### sales comparision year DATA Processing start
+
+data_sales = kkrroling(url2, xpathh2).split()
+data_sales.reverse()
+
+value_sales = Strtofloat(data_sales[1:-5:7])
+year_sales = data_sales[4:-5:7]
+month_sales = data_sales[6:-5:7]
+day_sales = data_sales[5:-5:7]
+
+nalza_sales = make_nalza(year_sales, month_sales, day_sales)
+nalza_sales_dateformat = strtodateformat(nalza_sales, nz_format_sales)
+#### sales comparision year DATA Processing end
+
+########making mv avg
+value_sales_mv_avg = make_mv_avg(value_sales, 5)
+value_ism_mv_avg = make_mv_avg(value_ism, 5)
+
+######################end
 
 
-print(kkrroling(url1, xpathh1))
 
 
 
@@ -37,92 +104,23 @@ print(kkrroling(url1, xpathh1))
 
 
 
-# def job():
-#     api_key = '5165191702:AAHfSlZy8SnvYBq58VWcfME7GgcENcVgCzM'
-#     bot = telegram.Bot(token=api_key)
-#     telegram_chat_id = '1786134332'
-#     webdriver_options = webdriver.ChromeOptions()
-#     webdriver_options.add_argument('headless')
-#
-#     driver = webdriver.Chrome(options=webdriver_options)
-#     url1 = 'https://ycharts.com/indicators/us_pmi'
-#     driver.get(url1)
-#     time.sleep(1)
-#     table = driver.find_element(By.CLASS_NAME, 'col-md-8').text
-#
-#     data_ism = table.split()
-#
-#
-#     driver2 = webdriver.Chrome(options=webdriver_options)
-#     url2 = 'https://investing.com/economic-calendar/retail-sales-1878'
-#     driver2.get(url2)
-#     time.sleep(1)
-#     table_sales = driver2.find_element(By.XPATH, "//*[@id='eventHistoryTable1878']").text
-#     data_sales = table_sales.split()
-#
-#     data_sl = data_ism[243:]
-#     value_until_202001 = data_sl[5:104:4]
-#     value_from_202001 = data_sl[107::4]
-#     value = value_until_202001 + value_from_202001
-#     value.reverse()
-#     n_m_unt20_01 = data_sl[2:102:4]
-#     n_d_unt20_01 = data_sl[3:102:4]
-#     n_y_unt20_01 = data_sl[4:102:4]
-#     nz_unt20_01 = []
-#     for i in range(0, len(n_d_unt20_01)):
-#         nz_unt20_01.append(n_y_unt20_01[i] + n_m_unt20_01[i] + n_d_unt20_01[i].strip(","))
-#
-#     n_m_fr_20_01 = data_sl[104::4]
-#     n_d_fr_20_01 = data_sl[105::4]
-#     n_y_fr_20_01 = data_sl[106::4]
-#     nz_fr_20_01 = []
-#     for i in range(0, len(n_d_fr_20_01)):
-#         nz_fr_20_01.append(n_y_fr_20_01[i] + n_m_fr_20_01[i] + n_d_fr_20_01[i].strip(","))
-#
-#     nz_pmi = nz_unt20_01+nz_fr_20_01
-#     nz_pmi.reverse()
-#     pmi_value_float = []
-#
-#     for i in range(0, len(value)):
-#         pmi_value_float.append(float(value[i]))
-#     pmi_nz_dateformat =[]
-#     for i in range(0, len(nz_pmi)):
-#         pmi_nz_dateformat.append(datetime.datetime.strptime(nz_pmi[i], '%Y%B%d'))
-#
-#     d_r_y_value=data_sales[-2:-36:-7]
-#     n_r_y_year = data_sales[-5:-40:-7]
-#     n_r_y_month = data_sales[-7:-40:-7]
-#     n_r_y_day = data_sales[-6:-37:-7]
-#     n_r_y_date = []
-#
-#     for i in range(0, len(n_r_y_year)):
-#         n_r_y_date.append(n_r_y_year[i]+n_r_y_month[i]+n_r_y_day[i].strip(","))
-#
-#     n_r_y_dateformat =[]
-#     d_r_y_float_value =[]
-#
-#     for i in range(0, len(n_r_y_date)):
-#         n_r_y_dateformat.append(datetime.datetime.strptime(n_r_y_date[i], '%Y%b%d'))
-#
-#     for i in range(0, len(d_r_y_value)):
-#         d_r_y_float_value.append(float(d_r_y_value[i].strip("%")))
-#
-#     today_date = (datetime.datetime.now().date()).strftime("%Y-%m-%d")
-#
-#     bot.sendMessage(chat_id = telegram_chat_id, text = '{}'.format(today_date))
-#     if((pmi_value_float[-1]>pmi_value_float[-2]>pmi_value_float[-3])&(d_r_y_float_value[-1]>d_r_y_float_value[-2]>d_r_y_float_value[-3])):
-#         bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : korean stock // sell : American dollar bond')
-#     elif((pmi_value_float[-1]<pmi_value_float[-2]<pmi_value_float[-3])&(d_r_y_float_value[-1]<d_r_y_float_value[-2]<d_r_y_float_value[-3])):
-#         bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : American dollar bond // sell : korean stock')
-#     else:
-#         bot.sendMessage(chat_id=telegram_chat_id, text='hold')
-#
-#
-#
-# schedule.every().days.at("08:40").do(job) #매일 8시40분에 실행
-#
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
-#
-# sys.exit()
+###Message Transfer
+def trnsfort():
+    bot.sendMessage(chat_id=telegram_chat_id, text='{} 기준'.format(today_date))
+    bot.sendMessage(chat_id=telegram_chat_id, text= 'pmi지수({}) : {} pmi지수({}) : {} pmi지수({}) : {}'
+                    .format(nalza_ism_dateformat[-1].date().strftime("%Y-%m-%d"), value_ism[-1],
+                            nalza_ism_dateformat[-2].date().strftime("%Y-%m-%d"), value_ism[-2],
+                            nalza_ism_dateformat[-3].date().strftime("%Y-%m-%d"), value_ism[-3]))
+    bot.sendMessage(chat_id=telegram_chat_id, text= 'sale지수({}) : {}  sale지수({}) : {} sale지수({}) : {}'
+                    .format(nalza_sales_dateformat[-1].date().strftime("%Y-%m-%d"), value_sales[-1],
+                            nalza_sales_dateformat[-2].date().strftime("%Y-%m-%d"), value_sales[-2],
+                            nalza_sales_dateformat[-3].date().strftime("%Y-%m-%d"), value_sales[-3]))
+
+    if((value_ism[-1]>value_ism[-2]>value_ism[-3])&(value_sales[-1]>value_sales[-2]>value_sales[-3])):
+        bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : korean stock // sell : American dollar bond')
+    elif((value_ism[-1]<value_ism[-2]<value_ism[-3])&(value_sales[-1]<value_sales[-2]<value_sales[-3])):
+        bot.sendMessage(chat_id = telegram_chat_id, text = 'buy : American dollar bond // sell : korean stock')
+    else:
+        bot.sendMessage(chat_id=telegram_chat_id, text='hold')
+
+# trnsfort()
