@@ -114,7 +114,6 @@ def do():
 
     trnsfort()
 
-
 schedule.every().days.at("22:33").do(job)
 
 while True:
