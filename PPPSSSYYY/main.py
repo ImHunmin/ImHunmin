@@ -15,6 +15,12 @@ from datetime import datetime
 from datetime import timedelta
 import numpy as np
 
+api_key = '5165191702:AAHfSlZy8SnvYBq58VWcfME7GgcENcVgCzM'
+bot = telegram.Bot(token=api_key)
+telegram_chat_id = '1786134332'
+
+today_date = (datetime.now().date()).strftime("%Y-%m-%d")
+
 def kkrroling(site, xxppaath):
     webdriver_options = webdriver.ChromeOptions()
     webdriver_options.add_argument('headless')
@@ -51,10 +57,6 @@ def job():
     url2 = 'https://investing.com/economic-calendar/retail-sales-1878'
     xpathh2 = "//*[@id='eventHistoryTable1878']"
     nz_format_sales = '%Y%b%d'
-
-    api_key = '5165191702:AAHfSlZy8SnvYBq58VWcfME7GgcENcVgCzM'
-    bot = telegram.Bot(token=api_key)
-    telegram_chat_id = '1786134332'
 
     today_date = (datetime.datetime.now().date()).strftime("%Y-%m-%d")
 
@@ -133,16 +135,13 @@ def make_mv_avg(list, w):
     mv_avg = np.convolve(x, np.ones(w), 'valid') / w
     return mv_avg
 
-
 ##################
 TodaY_Str = datetime.now().date().strftime("%Y%m%d")
-
 
 def howlong(day):
     today = datetime.now().date()
     howlongdayago = today - timedelta(days=day)
     return howlongdayago.strftime("%Y%m%d")
-
 
 # print(df[["종가", "거래량", "종목코드", "종목명"]])
 # print(df.iloc[1:, 3:])
@@ -160,13 +159,10 @@ def price_straight_array(da_te, MMarket):
         MV_bungi = make_mv_avg(df.iloc[:, 3].values.tolist(), 120)
         if (MV_fiv[-1] > MV_ten[-1] > MV_twe[-1] > MV_sixt[-1] > MV_bungi[-1]):
             GOL_K.append(df.iloc[-1:, -2].to_string())
-
         for i in range(0, len(GOL_K)):
             GOL_K[i] = GOL_K[i][-6:]
-
     time.sleep(1)
     return GOL_K
-
 
 def Shaking_Volume(da_te, MMarket):
     GOL_K = []
@@ -192,7 +188,6 @@ def Shaking_Volume(da_te, MMarket):
             GOL_K[i] = GOL_K[i][-6:]
     return GOL_K
 
-
 def TR_VO_straight_array(da_te, MMarket):
     VO = []
     stock_code = stock.get_market_ticker_list(TodaY_Str, market=MMarket)  # 현재일자 기준 가장 가까운 영업일의 코스피 상장종목 리스트
@@ -204,20 +199,17 @@ def TR_VO_straight_array(da_te, MMarket):
         print(df.iloc[:, 4].values.tolist()[-10:-1])
         time.sleep(2)
 
-
 def num_to_name(list):
     GOL_K_NAME = []
     for ticker in list:
         GOL_K_NAME.append(stock.get_market_ticker_name(ticker))
     return GOL_K_NAME
 
-
 def strtoint(lissst):
     intt_list = []
     for i in range(0, len(lissst)):
         intt_list.append(int(lissst[i]))
     return intt_list
-
 
 def PPoPP(List_Today, List_dayago):
     New_List_GK = []
@@ -231,23 +223,38 @@ def PPoPP(List_Today, List_dayago):
             New_List_GK.append(List_Today[i])
     return New_List_GK
 
-
-A = num_to_name(Shaking_Volume(TodaY_Str, "ALL"))
-
-for i in range(0, len(A)):
-    print(A[i])
-    print("https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query={}".format(A[i]))
-
+def trnsfort_anlysis(LIST):
+    bot.sendMessage(chat_id=telegram_chat_id, text='{} 기준'.format(today_date))
+    for i in range(0, len(LIST)):
+        bot.sendMessage(chat_id=telegram_chat_id, text='{}'.format(LIST[i]))
+        bot.sendMessage(chat_id=telegram_chat_id, text="[naverlink](https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query={})".format(LIST[i]), parse_mode='Markdown')
 
 
-
-
-
+def do_anly():
+    A = num_to_name(Shaking_Volume(TodaY_Str, "ALL"))
+    trnsfort_anlysis(A)
 
 
 
 
-schedule.every().day.at("22:30").do(job())
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+
+
+# for i in range(0, len(A)):
+#     print(A[i])
+#     print("https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query={}".format(A[i]))
+
+
+
+do_anly()
+
+
+
+
+
+
+
+# schedule.every().day.at("22:30").do(job())
+# schedule.every().day.at("22:30").do(do_anly())
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
