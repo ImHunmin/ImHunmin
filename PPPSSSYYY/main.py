@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import sys
 import schedule
+import os
 def kkrroling(site, xxppaath):
     webdriver_options = webdriver.ChromeOptions()
     webdriver_options.add_argument('headless')
@@ -35,7 +36,7 @@ def make_mv_avg(list, w):
     x = np.array(list, dtype=float)
     mv_avg = np.convolve(x, np.ones(w), 'valid') / w
     return mv_avg
-def do():
+def job():
     url1 = 'https://ycharts.com/indicators/us_pmi'
     xpathh1 = "/html/body/main/div/div[4]/div/div/div/div/div[1]/div[2]"
     nz_format_ism = '%Y%B%d'
@@ -78,18 +79,17 @@ def do():
     data_sales = kkrroling(url2, xpathh2).split()
     data_sales.reverse()
 
-    value_sales = Strtofloat(data_sales[1:-5:7])
-    year_sales = data_sales[4:-5:7]
-    month_sales = data_sales[6:-5:7]
-    day_sales = data_sales[5:-5:7]
+    value_sales = Strtofloat(data_sales[1:-11:7])
+
+    year_sales = data_sales[4:-11:7]
+    month_sales = data_sales[6:-11:7]
+    day_sales = data_sales[5:-11:7]
 
     nalza_sales = make_nalza(year_sales, month_sales, day_sales)
     nalza_sales_dateformat = strtodateformat(nalza_sales, nz_format_sales)
-    #### sales comparision year DATA Processing end
 
-    ########making mv avg
-    value_sales_mv_avg = make_mv_avg(value_sales, 5)
-    value_ism_mv_avg = make_mv_avg(value_ism, 5)
+    # value_sales_mv_avg = make_mv_avg(value_sales, 5)
+    # value_ism_mv_avg = make_mv_avg(value_ism, 5)
 
     ######################end
 
@@ -114,7 +114,6 @@ def do():
 
     trnsfort()
 
-schedule.every().days.at("22:33").do(job)
+job()
 
-while True:
-    schedule.run_pending()
+
