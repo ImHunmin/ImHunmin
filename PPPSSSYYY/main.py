@@ -1,13 +1,8 @@
 from selenium.webdriver.common.by import By
 from selenium import webdriver
-import time
 import datetime
 import telegram
-import numpy as np
-import pandas as pd
-import sys
 import schedule
-import os
 from pykrx import stock
 import time
 import pandas as pd
@@ -229,32 +224,12 @@ def trnsfort_anlysis(LIST):
         bot.sendMessage(chat_id=telegram_chat_id, text='{}'.format(LIST[i]))
         bot.sendMessage(chat_id=telegram_chat_id, text="[naverlink](https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query={})".format(LIST[i]), parse_mode='Markdown')
 
-
 def do_anly():
     A = num_to_name(Shaking_Volume(TodaY_Str, "ALL"))
     trnsfort_anlysis(A)
 
-
-
-
-
-
-# for i in range(0, len(A)):
-#     print(A[i])
-#     print("https://search.naver.com/search.naver?where=nexearch&sm=top_hty&fbm=0&ie=utf8&query={}".format(A[i]))
-
-
-
-do_anly()
-
-
-
-
-
-
-
-# schedule.every().day.at("22:30").do(job())
-# schedule.every().day.at("22:30").do(do_anly())
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
+schedule.every().day.at("22:30").do(job())
+schedule.every().day.at("22:40").do(do_anly())
+while True:
+    schedule.run_pending()
+    time.sleep(1)
